@@ -527,10 +527,10 @@ def gadget_field_add(fname, bounding_box=None, ds=None,add_smoothed_quantities=T
                     from powderday.agn_models.hickox import vary_bhluminosity
                     cfg.par.bhlfrac = vary_bhluminosity(nholes)
 
-                ds.add_field(("bh','luminosity"),function=_bhluminosity,sampling_type='particle',units='erg/s')
-                ds.add_field(("bh','coordinates"),function=_bhcoordinates,sampling_type='particle',units="cm")
-                ds.add_field(("bh','nu"),function=_bhsed_nu,sampling_type='particle',units='Hz')
-                ds.add_field(("bh','sed"),function=_bhsed_sed,sampling_type='particle',units="erg/s")
+                ds.add_field(("bh","luminosity"),function=_bhluminosity,sampling_type='particle',units='erg/s')
+                ds.add_field(("bh","coordinates"),function=_bhcoordinates,sampling_type='particle',units="cm")
+                ds.add_field(("bh","nu"),function=_bhsed_nu,sampling_type='particle',units='Hz')
+                ds.add_field(("bh","sed"),function=_bhsed_sed,sampling_type='particle',units="erg/s")
                 
 
 
