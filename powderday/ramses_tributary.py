@@ -6,7 +6,7 @@ import powderday.config as cfg
 from powderday.analytics import proj_plots
 from powderday.helpers import energy_density_absorbed_by_CMB
 from hyperion.dust import SphericalDust
-from powderday.grid_construction import enzo_grid_generate
+from powderday.grid_construction import ramses_grid_generate
 import yt
 import os
 import six
@@ -95,9 +95,9 @@ def yt_dataset_to_amr_grid_xyz(ds, quantity_mapping={}):
 
     return amr
 
-def enzo_m_gen(fname,field_add):
+def ramses_m_gen(fname,field_add):
     
-    reg,ds1 = enzo_grid_generate(fname,field_add)
+    reg,ds1 = ramses_grid_generate(fname,field_add)
 
     amr = yt_dataset_to_amr_grid_xyz(ds1, quantity_mapping={'density':('gas','dust_density')})
 
@@ -134,4 +134,3 @@ def enzo_m_gen(fname,field_add):
     dz = ds1.domain_width[2].in_units('cm')
     
     return m,xcent,ycent,zcent,dx,dy,dz,reg,ds1,boost
-

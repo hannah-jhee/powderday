@@ -236,9 +236,6 @@ def arepo_vornoi_grid_generate(fname, field_add):
     # proj_plots(ds)
 
 
-
-
-    
     if cfg.par.CONSTANT_DUST_GRID == False:
 
         # crash the code if the parameter choice for dust grid type isn't in
@@ -285,6 +282,42 @@ def arepo_vornoi_grid_generate(fname, field_add):
 
     return reg,ds,dustdens
 
+def ramses_grid_generate(fname,field_add):
+    #call the front end (frontends/ramses2pd) to add the fields in powderday format
+
+    ds = field_add(fname)
+
+    #set up the dust model
+    # crash the code if the parameter choice for dust grid type isn't in
+    # the hard coded valid list below
+    dust_grid_type_list = ['dtm', 'rr', 'manual','li_bestfit','li_ml']
+    try:
+        dust_choice = dust_grid_type_list.index(cfg.par.dust_grid_type)
+    except ValueError as e:
+        print('You chose a dust_choice that isnt a valid selection within the list: dust_grid_type_list....crashing now!')
+        sys.exit()
+
+    if cfg.par.dust_grid_type == 'dtm':
+        dtm_amr(ds)
+
+    if cfg.par.dust_grid_type == 'rr':
+        remy_ruyer_amr(ds)
+    
+    if cfg.par.dust_grid_type == 'li_bestfit':
+        li_bestfit_amr(ds)
+
+    if cfg.par.dust_grid_type == 'li_ml':
+        li_ml_amr(ds)
+
+    #now zoom in 
+    reg,ds1 = ramses_zoom(fname,ds,field_add)
+
+    #we need access to this h5 file while adding dust grids
+    #(potentially), so only remove after these have been added.
+    print("[grid_construction/ramses_grid_generate:] removing temp_ramses.h5")
+    os.remove('temp_ramses.h5')
+
+    return reg,ds1
 
 
 
