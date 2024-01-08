@@ -11,7 +11,7 @@ from powderday.analytics import stellar_sed_write, dump_data, SKIRT_data_dump, l
 from astropy import constants
 import fsps
 from powderday.image_processing import add_transmission_filters, convolve
-from powderday.m_control_tools import m_control_sph, m_control_enzo, m_control_arepo
+from powderday.m_control_tools import m_control_sph, m_control_enzo, m_control_arepo, m_control_ramses
 import powderday.backwards_compatibility as bc
 import powderday.error_handling as eh
 import powderday.SED_gen as sg
@@ -125,7 +125,8 @@ print('----------------------------------------------')
 options = {'gadget_hdf5': m_control_sph,
            'tipsy': m_control_sph,
            'enzo_packed_3d': m_control_enzo,
-           'arepo_hdf5': m_control_arepo}
+           'arepo_hdf5': m_control_arepo
+           'ramses' : m_control_ramses}
 
 m_gen = options[ds_type]()
 m, xcent, ycent, zcent, dx, dy, dz, reg, ds, boost = m_gen(fname, field_add)

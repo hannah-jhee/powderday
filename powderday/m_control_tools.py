@@ -12,6 +12,9 @@ def m_control_arepo():
     from powderday.arepo_tributary import arepo_m_gen as m_gen
     return m_gen
 
+def m_control_ramses():
+    from powderday.ramses_tributary import ramses_m_gen as m_gen
+
 def ad_selector(ds):
 
     def sph_ad():
@@ -24,13 +27,17 @@ def ad_selector(ds):
 
     def arepo_ad():
         return ds.all_data()
+
+    def ramses_ad():
+        return ds.all_data()
     
     ds_type = ds.dataset_type 
     #define the options dictionary
     options = {'gadget_hdf5':sph_ad,
                'tipsy':sph_ad,
                'enzo_packed_3d':enzo_ad,
-               'arepo_hdf5':arepo_ad}
+               'arepo_hdf5':arepo_ad,
+               'ramses':ramses_ad}
 
 
     ad = options[ds_type]()
