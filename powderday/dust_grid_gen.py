@@ -299,6 +299,7 @@ def dtm_amr(ds):
     
     def _dust_density_dtm_amr(field, data):
         return data[('gas', 'metal_density')].in_units("g/cm**3")*cfg.par.dusttometals_ratio
+        #return (data[('gas', 'metal_mass')]/data[('gas','volume')]).in_units('g/cm**3') * cfg.par.dusttometals_ratio
     ds.add_field(('gas', 'dust_density'), function=_dust_density_dtm_amr, units = 'g/cm**3', sampling_type='cell')
 
 

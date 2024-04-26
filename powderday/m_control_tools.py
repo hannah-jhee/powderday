@@ -14,6 +14,7 @@ def m_control_arepo():
 
 def m_control_ramses():
     from powderday.ramses_tributary import ramses_m_gen as m_gen
+    return m_gen
 
 def ad_selector(ds):
 
@@ -26,7 +27,7 @@ def ad_selector(ds):
         return ds
 
     def arepo_ad():
-        return ds.all_data()
+        return ds#.all_data()
 
     def ramses_ad():
         return ds.all_data()

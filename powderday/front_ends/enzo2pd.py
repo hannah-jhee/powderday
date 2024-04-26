@@ -61,9 +61,6 @@ def enzo_field_add(fname,ds = None, starages = False):
     ds.add_particle_filter("newstars")
     ad = ds.all_data()
 
-
-
-
     ds.add_field(('star','metals'),function=_starmetals,units="code_metallicity",sampling_type='particle')
     ds.add_field(('star','coordinates'),function=_starcoordinates,units="cm",sampling_type='particle')
     ds.add_field(('stellar','ages'),function=_stellarages,units='Gyr',sampling_type='particle')

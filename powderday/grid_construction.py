@@ -4,7 +4,7 @@ import random
 import numpy as np
 import powderday.config as cfg
 from powderday.gridstats import gridstats
-from powderday.zoom import octree_zoom_bbox_filter,arepo_zoom,enzo_zoom
+from powderday.zoom import octree_zoom_bbox_filter,arepo_zoom,enzo_zoom,ramses_zoom
 from yt.geometry.selection_routines import AlwaysSelector
 #octree quantities for dust
 from powderday.dust_grid_gen import dtm_grid_oct, remy_ruyer_oct, manual_oct,li_bestfit_oct,li_ml_oct
@@ -287,6 +287,7 @@ def ramses_grid_generate(fname,field_add):
 
     ds = field_add(fname)
 
+
     #set up the dust model
     # crash the code if the parameter choice for dust grid type isn't in
     # the hard coded valid list below
@@ -318,9 +319,6 @@ def ramses_grid_generate(fname,field_add):
     os.remove('temp_ramses.h5')
 
     return reg,ds1
-
-
-
 
 
 

@@ -64,7 +64,7 @@ if cfg.par.add_neb_emission and not cfg.par.use_cloudy_tables:
 # =========================================================
 # CHECK FOR THE EXISTENCE OF A FEW CRUCIAL FILES FIRST
 # =========================================================
-eh.file_exist(model.hydro_dir+model.snapshot_name)
+#eh.file_exist(model.hydro_dir+model.snapshot_name) ## [HANNAH] for ramses
 eh.file_exist(par.dustdir+par.dustfile)
 
 # =========================================================
@@ -125,9 +125,9 @@ print('----------------------------------------------')
 options = {'gadget_hdf5': m_control_sph,
            'tipsy': m_control_sph,
            'enzo_packed_3d': m_control_enzo,
-           'arepo_hdf5': m_control_arepo
+           'arepo_hdf5': m_control_arepo,
            'ramses' : m_control_ramses}
-
+ 
 m_gen = options[ds_type]()
 m, xcent, ycent, zcent, dx, dy, dz, reg, ds, boost = m_gen(fname, field_add)
 

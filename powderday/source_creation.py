@@ -513,10 +513,11 @@ def BH_source_add(m,reg,df_nu,boost):
 
         print ('Number AGNs in the cutout with non zero luminositites: ', len(agn_ids))
 
-        fnu_arr = sg.get_agn_seds(agn_ids, reg)
-        nu = reg["bh","nu"].value
+        if len(agn_ids)>0:
+            fnu_arr = sg.get_agn_seds(agn_ids, reg)
+            nu = reg["bh","nu"].value
 
-        for j in range(len(agn_ids)):
+            for j in range(len(agn_ids)):
                 i = agn_ids[j]
                 fnu = fnu_arr[j,:]
                 nu, fnu = wavelength_compress(nu,fnu,df_nu)
@@ -529,7 +530,7 @@ def BH_source_add(m,reg,df_nu,boost):
                                         spectrum = (nu,fnu),
                                         position = (reg["bh","coordinates"][i,:].in_units('cm').value-boost).tolist())
 
-        dump_AGN_SEDs(nu,master_bh_fnu,reg["bh","luminosity"].value)
+            dump_AGN_SEDs(nu,master_bh_fnu,reg["bh","luminosity"].value)
 
 
 def DIG_source_add(m,reg,df_nu,boost):

@@ -230,7 +230,12 @@ def ramses_zoom(fname,ds,field_add):
     #convenience function within hyperion, AMRGrid.from_yt requires a
     #datasaet print("[ramses_tributary/ramses_m_gen]: saving the dataset
     #as temp_ramses.h5")
-    reg.save_as_dataset('temp_ramses.h5',fields=[('all','creation_time'),('gas','metal_density'),('gas','density'),('newstars','metallicity_fraction'),('newstars','particle_mass'),('all', 'particle_index'),('index', 'grid_level'),('gas','dust_density')])
+#    reg.save_as_dataset('temp_ramses.h5',
+#                        fields=[('all','creation_time'),('gas','metal_density'),('gas','density'),('newstars','metallicity_fraction'),
+#                                ('newstars','particle_mass'),('all', 'particle_index'),('index', 'grid_level'),('gas','dust_density')])
+    reg.save_as_dataset('temp_ramses.h5',
+                        fields=[('all','particle_birth_time'),('gas','metal_density'),('gas','density'),('star','metallicity_fraction'),
+                                ('star','particle_mass'),('all', 'particle_index'),('index', 'grid_level'),('gas','dust_density')])
     ds1 = yt.load('temp_ramses.h5')
     ad1 = ds1.all_data()
     print("[zoom/ramses_zoom]: temporarily saving temp_ramses.h5")

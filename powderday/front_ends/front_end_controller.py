@@ -10,7 +10,8 @@ def stream(fname):
     
     def gadget():
         if ('PartType0', 'CS Temperature') in ds.derived_field_list:
-            from powderday.front_ends.CSgadget2pd import gadget_field_add as field_add
+            #from powderday.front_ends.CSgadget2pd import gadget_field_add as field_add
+            from powderday.front_ends.gadget2pd import gadget_field_add as field_add
         elif ('PartType4', 'TemperatureMax') in ds.derived_field_list:
             from powderday.front_ends.benopp_gadget2pd import gadget_field_add as field_add
         else:

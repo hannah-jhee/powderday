@@ -593,7 +593,7 @@ def get_agn_seds(agn_ids, reg):
     fnu_in = []
     metals_avg = []
     for agn_id in agn_ids:
-        fnu_in.append(reg["bh","sed"][agn_id,:].in_units("Lsun").value/reg["bhnu"].in_units("Hz").value)
+        fnu_in.append(reg["bh","sed"][agn_id,:].in_units("Lsun").value/reg["bh","nu"].in_units("Hz").value)
         nu.append(reg["bh","nu"].in_units("Hz").value)
         all_gas_coordinates = reg["gas","coordinates"].in_units('kpc').value
         agn_coordinates = reg["bh","coordinates"][agn_id].in_units('kpc').value
