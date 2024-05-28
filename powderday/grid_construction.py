@@ -282,11 +282,18 @@ def arepo_vornoi_grid_generate(fname, field_add):
 
     return reg,ds,dustdens
 
-def ramses_grid_generate(fname,field_add):
-    #call the front end (frontends/ramses2pd) to add the fields in powderday format
+def ramses_grid_generate(fname, field_add):
 
-    ds = field_add(fname)
+    print('[grid_construction]: bbox_lim = ', cfg.par.bbox_lim)
 
+    bbox = [[-2.*cfg.par.bbox_lim, 2.*cfg.par.bbox_lim],
+            [-2.*cfg.par.bbox_lim, 2.*cfg.par.bbox_lim],
+            [-2.*cfg.par.bbox_lim, 2.*cfg.par.bbox_lim]]
+
+    # load the DS and add pd fields.  this is the first field addition
+    # of the simulation, so we don't yet need to add the smoothed
+    # quantities (which can take some time in yt4.x).
+    ds = field_add(fname, bounding_box=bbox)#,add_smoothed_quantities=False)
 
     #set up the dust model
     # crash the code if the parameter choice for dust grid type isn't in
@@ -303,7 +310,7 @@ def ramses_grid_generate(fname,field_add):
 
     if cfg.par.dust_grid_type == 'rr':
         remy_ruyer_amr(ds)
-    
+
     if cfg.par.dust_grid_type == 'li_bestfit':
         li_bestfit_amr(ds)
 
@@ -315,10 +322,13 @@ def ramses_grid_generate(fname,field_add):
 
     #we need access to this h5 file while adding dust grids
     #(potentially), so only remove after these have been added.
-    print("[grid_construction/ramses_grid_generate:] removing temp_ramses.h5")
-    os.remove('temp_ramses.h5')
+
+    # Hannah : 주석처리 
+    #print("[grid_construction/ramses_grid_generate:] removing temp_ramses.h5")
+    #os.remove('temp_ramses.h5')
 
     return reg,ds1
+
 
 
 

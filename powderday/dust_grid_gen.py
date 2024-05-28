@@ -31,10 +31,11 @@ def manual_oct(reg,refined):
     return dust_smoothed
 
 def dtm_grid_oct(reg,refined):
+    # HANNAH
     wTrue = np.where(np.array(refined) == True)[0]
+    #wTrue = np.array(refined)==True
     wFalse = np.where(np.array(refined) == False)[0]
-
-    
+    #wFalse = np.array(refined)==False
 
     density_smoothed = reg["gas","smootheddensity"]
     metallicity_smoothed = reg["gas","smoothedmetals"]

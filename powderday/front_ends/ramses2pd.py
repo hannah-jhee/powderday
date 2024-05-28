@@ -5,7 +5,7 @@ import yt
 import powderday.config as cfg
 from powderday.mlt.dgr_extrarandomtree_part import dgr_ert
 
-def ramses_field_add(fname, bounding_box=None, ds=None):
+def ramses_field_add(fname, bounding_box=None, ds=None,add_smoothed_quantities=False):
     
     # metallicity fraction
     def _starmetallicityfraction(field, data):
@@ -39,6 +39,13 @@ def ramses_field_add(fname, bounding_box=None, ds=None):
     def _gasmetals(field,data):
         return data[('gas','metallicity')]
     # gascoordinates
+    def _gascoordinates(field,data):
+        xpos = data[('gas','x')].in_units('cm')
+        ypos = data[('gas','y')].in_units('cm')
+        zpos = data[('gas','z')].in_units('cm')
+        coordinates = data.ds.arr(np.c_[xpos, ypos, zpos], "cm")
+        return coordinates
+
     # gasmasses
     def _gasmasses(field,data):
         return data[('gas','mass')]
@@ -50,8 +57,26 @@ def ramses_field_add(fname, bounding_box=None, ds=None):
             return data[('gas','metallicity')]*0. # just some dimensionless array
     # gassfr
     # gassmootheddensity
+    def _gassmootheddensity(field,data):
+        if float(yt.__version__[0:3]) >= 4:
+            return data.ds.parameters['octree'][('gas','density')]
+        else:
+            return data[('deposit', 'gas_density')]
+
     # gassmothedmetals
+    def _gassmoothedmetals(field,data):
+        if float(yt.__version__[0:3]) >= 4:
+            return data.ds.parameters['octree'][('gas','metals')]
+        else:
+            # Does this field exist?
+            return data[('deposit', 'gas_smoothed_metallicity')]
+
     # gassmoothedmasses
+    def _gassmoothedmasses(field,data):
+        if float(yt.__version__[0:3]) >= 4:
+            return data.ds.parameters['octree'][('gas','masses')]
+        else:
+            return data[('deposit','Gas_mass')]
 
     # metaldens_00
     # metaldens
@@ -101,11 +126,17 @@ def ramses_field_add(fname, bounding_box=None, ds=None):
     ds.add_field(('star','coordinates'),function=_starcoordinates,units="cm",sampling_type='particle')
     ds.add_field(('stellar','ages'),function=_stellarages,units='Gyr',sampling_type='particle')
     ds.add_field(('star','masses'),function=_starmasses,units='g',sampling_type='particle')
+
+    ds.add_field(('gas','coordinates'), function=_gascoordinates, units='cm',sampling_type='cell')
     ds.add_field(('gas','density'),function=_gasdensity,units='g/cm**3',sampling_type='cell')
     ds.add_field(('gas','metals'),function=_gasmetals,units="code_metallicity",sampling_type='cell')
     ds.add_field(('gas','metal_density'),function=_gasmetaldensity,units="g/cm**3",sampling_type='cell')
     ds.add_field(('gas','fh2'),function=_gasfh2,units='dimensionless',sampling_type='cell')
     ds.add_field(('gas','masses'),function=_gasmasses,units='g',sampling_type='cell')
+
+    #ds.add_field(('gas','smootheddensity'), function=_gassmootheddensity, units='g/cm**3', sampling_type='cell')
+    #ds.add_field(('gas','smoothedmetals'), function=_gassmoothedmetals, units='code_metallicity', sampling_type='cell')
+    #ds.add_field(('gas','smoothedmasses'), function=_gassmoothedmasses, units='g', sampling_type='cell')
     
 
     ad = ds.all_data()

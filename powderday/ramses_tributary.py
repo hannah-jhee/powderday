@@ -77,7 +77,7 @@ def yt_dataset_to_amr_grid_xyz(ds, quantity_mapping={}):
         for igrid in np.nonzero(levels == ilevel)[0]:
 
             # Get yt grid
-            yt_grid = ds.index.grids[igrid]
+            yt_grid = ds.index._grids[igrid]
 
             # Add a new Hyperion grid
             grid = level.add_grid()
@@ -99,7 +99,9 @@ def ramses_m_gen(fname,field_add):
     
     reg,ds1 = ramses_grid_generate(fname,field_add)
 
-    amr = yt_dataset_to_amr_grid_xyz(ds1, quantity_mapping={'density':('gas','dust_density')})
+    # HANNAH
+    #amr = yt_dataset_to_amr_grid_xyz(ds1, quantity_mapping={'density':('gas','dust_density')})
+    amr = yt_dataset_to_amr_grid_xyz(ds1, quantity_mapping={'density':('deposit','dust_density')})
 
     m = Model()
 
