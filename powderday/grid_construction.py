@@ -282,18 +282,10 @@ def arepo_vornoi_grid_generate(fname, field_add):
 
     return reg,ds,dustdens
 
-def ramses_grid_generate(fname, field_add):
-
-    print('[grid_construction]: bbox_lim = ', cfg.par.bbox_lim)
-
-    bbox = [[-2.*cfg.par.bbox_lim, 2.*cfg.par.bbox_lim],
-            [-2.*cfg.par.bbox_lim, 2.*cfg.par.bbox_lim],
-            [-2.*cfg.par.bbox_lim, 2.*cfg.par.bbox_lim]]
-
-    # load the DS and add pd fields.  this is the first field addition
-    # of the simulation, so we don't yet need to add the smoothed
-    # quantities (which can take some time in yt4.x).
-    ds = field_add(fname, bounding_box=bbox)#,add_smoothed_quantities=False)
+def ramses_grid_generate(fname,field_add):
+    #call the front end (frontends/enzo2pd) to add the fields in powderday format
+    
+    ds = field_add(fname)
 
     #set up the dust model
     # crash the code if the parameter choice for dust grid type isn't in
@@ -310,25 +302,136 @@ def ramses_grid_generate(fname, field_add):
 
     if cfg.par.dust_grid_type == 'rr':
         remy_ruyer_amr(ds)
-
+    
     if cfg.par.dust_grid_type == 'li_bestfit':
         li_bestfit_amr(ds)
 
     if cfg.par.dust_grid_type == 'li_ml':
         li_ml_amr(ds)
 
+    #print(ds.derived_field_list)
     #now zoom in 
-    reg,ds1 = ramses_zoom(fname,ds,field_add)
+    reg = ramses_zoom(fname,ds,field_add)
 
+    #reg = ds.r[:,:,:]
     #we need access to this h5 file while adding dust grids
     #(potentially), so only remove after these have been added.
+    #print("[grid_construction/stream_grid_generate:] removing temp_stream.h5")
+    #os.remove('temp_hr5.h5')
 
-    # Hannah : 주석처리 
-    #print("[grid_construction/ramses_grid_generate:] removing temp_ramses.h5")
-    #os.remove('temp_ramses.h5')
+    # print("Here in grid construction:::::::::::::::::::",reg[('stellar','ages')])
 
-    return reg,ds1
+    if float(yt.__version__[0:3]) >= 4:
+        refined = reg.parameters['octree'][('index','refined')].astype('bool')
 
+        #get central positions of cells as edges + width/2.
+        #        xpos = (ds.parameters['octree'][('index', 'x')]+(ds.parameters['octree'][('index','dx')]/2.))[~refined]
+        #        ypos = (ds.parameters['octree'][('index', 'y')]+(ds.parameters['octree'][('index','dy')]/2.))[~refined]
+        #        zpos = (ds.parameters['octree'][('index', 'z')]+(ds.parameters['octree'][('index','dz')]/2.))[~refined]
+
+        xpos = (reg.parameters['octree'][('index','x')])[~refined]
+        ypos = (reg.parameters['octree'][('index','y')])[~refined]
+        zpos = (reg.parameters['octree'][('index','z')])[~refined]
+
+        #comebine these into the fc1 array with dimensions (nparticles,3)
+        fc1 = np.array([xpos,ypos,zpos]).T
+
+        dx = reg.parameters['octree'][('index','dx')][~refined]
+        dy = reg.parameters['octree'][('index','dy')][~refined]
+        dz = reg.parameters['octree'][('index','dz')][~refined]
+        fw1 = np.array([dx,dy,dz]).T
+
+
+        n_ref = reg.parameters['octree'].n_ref
+        #max_level = find_max_level(refined)#'max_level not yet implemented in yt4.x'
+        #note, we could figure this out from the max number of trues in a row
+        nocts = len(refined)-np.sum(refined)
+
+
+        
+    else:
+        #saved = ds.index.oct_handler.save_octree()
+        #always = AlwaysSelector(None)
+       
+        #ir1 = ds.index.oct_handler.ires(always)  # refinement levels
+        fc1 = reg.parameters["fc1"] #coordinates in code_length
+        fw1 = reg.parameters["fw1"] #width of cell in code_length
+        refined = reg.parameters["refined"]
+        
+        n_ref = reg.parameters["n_ref"]
+        max_level = reg.parameters["max_level"]
+        nocts = reg.parameters["nocts"]
+    # convert fc1 and fw1 to YTArrays
+    fc1 = ds.arr(fc1, 'code_length')
+    fw1 = ds.arr(fw1, 'code_length')
+
+
+
+    print('----------------------------')
+    print('yt Octree Construction Stats')
+    print('----------------------------')
+    print(' n_ref = ', n_ref)
+    #print(' max_level = ', max_level)
+    print(' nocts = ', nocts)
+    print('----------------------------')
+
+    gridstats(fc1, fw1)
+
+    # ==================================
+    
+    #try:
+    #    refined.reshape(len(ir1))
+    #except:
+    refinements = 2**(3*cfg.par.oref)
+    refined2 = []
+    for r in refined:
+        if r == 1:
+            refined2.append(True)
+        if r == 0:
+            refined2.append(np.zeros(refinements).astype('bool'))
+    refined = np.hstack(refined2)
+
+
+    if cfg.par.CONSTANT_DUST_GRID == False:
+
+        # crash the code if the parameter choice for dust grid type isn't in 
+        # the hard coded valid list below
+        dust_grid_type_list = ['dtm', 'rr', 'manual','li_bestfit','li_ml']
+        try:
+            dust_choice = dust_grid_type_list.index(cfg.par.dust_grid_type)
+        except ValueError as e:
+            print('You chose a dust_choice that isnt a valid selection within the list: dust_grid_type_list....crashing now!')
+            sys.exit()
+
+        if cfg.par.dust_grid_type == 'dtm':
+            dtm_amr(reg)
+
+        if cfg.par.dust_grid_type == 'rr':
+            dust_smoothed_remy_ruyer = remy_ruyer_oct(reg, refined)
+            dust_smoothed = dust_smoothed_remy_ruyer
+
+        if cfg.par.dust_grid_type == 'manual':
+            dust_smoothed_manual = manual_oct(reg, refined)
+            dust_smoothed = dust_smoothed_manual
+        
+        if cfg.par.dust_grid_type == 'li_bestfit':
+            dust_smoothed_li_bestfit = li_bestfit_oct(reg,refined)
+            dust_smoothed=dust_smoothed_li_bestfit
+
+        if cfg.par.dust_grid_type == 'li_ml':
+            dust_smoothed_li_ml = li_ml_oct(reg,refined)
+            dust_smoothed = dust_smoothed_li_ml
+
+    else:
+        print('cfg.par.CONSTANT_DUST_GRID=True')
+        print('setting constant dust grid to 4.e-22')
+        dust_smoothed = np.zeros(len(refined))+4.e-22
+
+
+    # return refined,dust_smoothed,xmin,xmax,ymin,ymax,zmin,zmax,boost
+    return reg,ds#refined, dust_smoothed, fc1, fw1, reg, ds
+
+    #return reg,ds
 
 
 

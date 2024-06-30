@@ -134,9 +134,10 @@ def ramses_field_add(fname, bounding_box=None, ds=None,add_smoothed_quantities=F
     ds.add_field(('gas','fh2'),function=_gasfh2,units='dimensionless',sampling_type='cell')
     ds.add_field(('gas','masses'),function=_gasmasses,units='g',sampling_type='cell')
 
-    #ds.add_field(('gas','smootheddensity'), function=_gassmootheddensity, units='g/cm**3', sampling_type='cell')
-    #ds.add_field(('gas','smoothedmetals'), function=_gassmoothedmetals, units='code_metallicity', sampling_type='cell')
-    #ds.add_field(('gas','smoothedmasses'), function=_gassmoothedmasses, units='g', sampling_type='cell')
+
+    ds.add_field(('gas','smootheddensity'), function=_gasdensity, units='g/cm**3', sampling_type='cell')
+    ds.add_field(('gas','smoothedmetals'), function=_gasmetals, units='code_metallicity', sampling_type='cell')
+    ds.add_field(('gas','smoothedmasses'), function=_gasmasses, units='g', sampling_type='cell')
     
 
     ad = ds.all_data()
