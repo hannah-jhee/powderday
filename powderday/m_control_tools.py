@@ -30,7 +30,7 @@ def ad_selector(ds):
         return ds#.all_data()
 
     def ramses_ad():
-        return ds.all_data()
+        return ds
     
     ds_type = ds.dataset_type 
     #define the options dictionary

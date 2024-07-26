@@ -131,7 +131,6 @@ def octree_zoom_bbox_filter(fname,ds,bbox0,field_add):
 
 def arepo_zoom(fname,ds,bbox0,field_add):
 
-
     ds.index
     ad = ds.all_data()
 
@@ -227,30 +226,25 @@ def ramses_zoom(fname,ds,field_add):
     #convenience function within hyperion, AMRGrid.from_yt requires a
     #datasaet print("[enzo_tributary/enzo_m_gen]: saving the dataset
     #as temp_enzo.h5")
-    reg.save_as_dataset('temp_enzo.h5',fields=[('all','creation_time'),('gas','metal_density'),('gas','density'),('newstars','metallicity_fraction'),('newstars','particle_mass'),('all', 'particle_index'),('index', 'grid_level'),('gas','dust_density')])
-    ds1 = yt.load('temp_enzo.h5')
+    reg.save_as_dataset('temp_ramses.h5',fields=[('all','conformal_birth_time'),('gas','metal_density'),('gas','density'),
+                                                 ('star','metallicity_fraction'),('star','particle_mass'),
+                                                 ('all', 'particle_index'),('index', 'grid_level'),('gas','dust_density')])
+    ds1 = yt.load('temp_ramses.h5')
     ad1 = ds1.all_data()
-    print("[zoom/enzo_zoom]: temporarily saving temp_enzo.h5")
-/
-    #now copy over all of the ds.index grid construction items that are in the region to the new dataset
-    ds1.domain_width = reg.right_edge - reg.left_edge
-    ds1.domain_left_edge = reg.left_edge
-    ds1.domain_right_edge = reg.right_edge
-    ds1.domain_center = reg.center
-    ds1.index.get_levels = reg.index.get_levels
-    ds1.index.get_smallest_ds = reg.index.get_smallest_dx
-    ds1.index.grid = reg.index.grid
-    ds1.index.grid_corners = reg.index.grid_corners
-    ds1.index.grid_dimensions = reg.index.grid_dimensions
-    ds1.index.grid_levels = reg.index.grid_levels
-    ds1.index.grid_left_edge = reg.index.grid_left_edge
-    ds1.index.grid_right_edge = reg.index.grid_right_edge
-    ds1.index.grid_particle_count = reg.index.grid_particle_count
-    ds1.index.grids = reg.index.grids
-    ds1.index.index_filename = reg.index.index_filename
+    print("[zoom/enzo_zoom]: temporarily saving temp_ramses.h5")
+
+    # Add index
     ds1.index.max_level = reg.index.max_level
-    ds1.index_num_grids = reg.index.num_grids
-    ds1.index.num_stars = reg.index.num_stars
-    ds1.index.parameters = reg.index.parameters
+    ds1.index.grid_levels = reg[('index','grid_level')]
+    ds1.index.grids = reg[('index','grid_indices')]
+
+    x_ledge = reg[('index','x')]-reg[('index','dx')]/2
+    y_ledge = reg[('index','y')]-reg[('index','dy')]/2
+    z_ledge = reg[('index','z')]-reg[('index','dz')]/2
+    ds1.index.grid_left_edge = ds1.arr(np.c_[x_ledge.value, y_ledge.value, z_ledge.value], units='code_length')
+    x_redge = reg[('index','x')]+reg[('index','dx')]/2
+    y_redge = reg[('index','y')]+reg[('index','dy')]/2
+    z_redge = reg[('index','z')]+reg[('index','dz')]/2
+    ds1.index.grid_right_edge = ds1.arr(np.c_[x_redge.value, y_redge.value, z_redge.value], units='code_length')
     
     return reg,ds1
