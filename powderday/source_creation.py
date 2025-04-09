@@ -298,6 +298,8 @@ def add_binned_seds(df_nu,stars_list,diskstars_list,bulgestars_list,cosmoflag,m,
     print ('Running SPS for Binned SEDs')
     print ('calculating the SEDs for ',len(sed_bins_list_has_stellar_mass),' bins')
     
+    print("[source_creation/add_binned_seds:] HJ :: cosmoflag is forced to True...because it should be for DARWIN...dunno...")
+    cosmoflag=True
     binned_stellar_nu,binned_stellar_fnu_has_stellar_mass,disk_fnu,bulge_fnu,mfrac,binned_line_em_has_stellar_mass = sg.allstars_sed_gen(sed_bins_list_has_stellar_mass,cosmoflag,sp)
     
 

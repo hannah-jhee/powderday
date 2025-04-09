@@ -1,5 +1,6 @@
 from __future__ import print_function
 import numpy as np
+import pickle
 import yt
 #from yt.fields.particle_fields import add_volume_weighted_smoothed_field
 import powderday.config as cfg
@@ -24,7 +25,7 @@ def ramses_field_add(fname, bounding_box=None, ds=None,add_smoothed_quantities=F
     # starformationtime
     # starmasses
     def _starmasses(field,data):
-        return data[('star','particle_mass')]
+        return data[('star','particle_mass')].in_units('g')
     # diskstarcoordinates
     # diskstarmasses
     # bulgestarmasses
@@ -57,26 +58,26 @@ def ramses_field_add(fname, bounding_box=None, ds=None,add_smoothed_quantities=F
             return data[('gas','metallicity')]*0. # just some dimensionless array
     # gassfr
     # gassmootheddensity
-    def _gassmootheddensity(field,data):
-        if float(yt.__version__[0:3]) >= 4:
-            return data.ds.parameters['octree'][('gas','density')]
-        else:
-            return data[('deposit', 'gas_density')]
+    #def _gassmootheddensity(field,data):
+    #    if float(yt.__version__[0:3]) >= 4:
+    #        return data.ds.parameters['octree'][('gas','density')]
+    #    else:
+    #        return data[('deposit', 'gas_density')]
 
     # gassmothedmetals
-    def _gassmoothedmetals(field,data):
-        if float(yt.__version__[0:3]) >= 4:
-            return data.ds.parameters['octree'][('gas','metals')]
-        else:
-            # Does this field exist?
-            return data[('deposit', 'gas_smoothed_metallicity')]
+    #def _gassmoothedmetals(field,data):
+    #    if float(yt.__version__[0:3]) >= 4:
+    #        return data.ds.parameters['octree'][('gas','metals')]
+    #    else:
+    #        # Does this field exist?
+    #        return data[('deposit', 'gas_smoothed_metallicity')]
 
     # gassmoothedmasses
-    def _gassmoothedmasses(field,data):
-        if float(yt.__version__[0:3]) >= 4:
-            return data.ds.parameters['octree'][('gas','masses')]
-        else:
-            return data[('deposit','Gas_mass')]
+    #def _gassmoothedmasses(field,data):
+    #    if float(yt.__version__[0:3]) >= 4:
+    #        return data.ds.parameters['octree'][('gas','masses')]
+    #    else:
+    #        return data[('deposit','Gas_mass')]
 
     # metaldens_00
     # metaldens
@@ -116,10 +117,20 @@ def ramses_field_add(fname, bounding_box=None, ds=None,add_smoothed_quantities=F
     # (only arepo) dustcoordinates
 
     if fname !=  None:
-        ds = yt.load(fname)
-        ds.index
+        with open(fname, 'rb') as handle:
+            global_bins, x, data = pickle.load(handle)
+        
+        ds = yt.load_amr_grids(data, [global_bins,global_bins,global_bins], x,
+                               length_unit=(4096.09018298, 'kpc'),    # input 받아서 처리하는걸로 나중에 바꾸기1!!!!!!!
+                               time_unit=(14.50798394,'Gyr'),    # input 받아서 처리하는걸로 나중에 바꾸기1!!!!!!!
+                               mass_unit=(2.73155891e+12, 'Msun'),    # input 받아서 처리하는걸로 나중에 바꾸기1!!!!!!!
+                               sim_time=0.95092644,    # input 받아서 처리하는걸로 나중에 바꾸기1!!!!!!!
+                               periodicity=(False,False,False))
+        ds.cosmolgical_simulation=1
+    else:
+        raise ValueError("Filename is None...")
 
-    ad = ds.all_data()
+    #ad = ds.all_data()
 
     ds.add_field(('star','metallicity_fraction'),function=_starmetallicityfraction,units="dimensionless",sampling_type='particle')
     ds.add_field(('star','metals'),function=_starmetals,units="code_metallicity",sampling_type='particle')
@@ -129,14 +140,15 @@ def ramses_field_add(fname, bounding_box=None, ds=None,add_smoothed_quantities=F
 
     ds.add_field(('gas','coordinates'), function=_gascoordinates, units='cm',sampling_type='cell')
     ds.add_field(('gas','density'),function=_gasdensity,units='g/cm**3',sampling_type='cell')
+    ds.add_field(('gas','smootheddensity'), function=_gasdensity, units='g/cm**3', sampling_type='cell')
     ds.add_field(('gas','metals'),function=_gasmetals,units="code_metallicity",sampling_type='cell')
     ds.add_field(('gas','metal_density'),function=_gasmetaldensity,units="g/cm**3",sampling_type='cell')
-    ds.add_field(('gas','fh2'),function=_gasfh2,units='dimensionless',sampling_type='cell')
+    ds.add_field(('gas','smoothedmetals'),function=_gasmetaldensity, units='g/cm**3', sampling_type='cell')
+    #ds.add_field(('gas','fh2'),function=_gasfh2,units='dimensionless',sampling_type='cell')
     ds.add_field(('gas','masses'),function=_gasmasses,units='g',sampling_type='cell')
+    ds.add_field(('gas','smoothedmasses'), function=_gasmasses, units='g', sampling_type='cell')
 
     
     ad = ds.all_data()
-
-    print("Here in RAMSES dataset :: Hannah following Ankit's method")
     
     return ds

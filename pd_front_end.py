@@ -126,7 +126,8 @@ options = {'gadget_hdf5': m_control_sph,
            'tipsy': m_control_sph,
            'enzo_packed_3d': m_control_enzo,
            'arepo_hdf5': m_control_arepo,
-           'ramses' : m_control_ramses}
+           'ramses' : m_control_ramses,
+           'stream' : m_control_ramses}
  
 m_gen = options[ds_type]()
 m, xcent, ycent, zcent, dx, dy, dz, reg, ds, boost = m_gen(fname, field_add)
@@ -173,6 +174,7 @@ if cfg.par.FORCE_BINNED == False:
 # note - the generation of the SEDs is called within
 # add_binned_seds itself, unlike add_newstars, which requires
 # that sg.allstars_sed_gen() be called first.
+print(f"[pd_front_end:] HJ :: ds.cosmological_simulation is {ds.cosmological_simulation}")
 m = add_binned_seds(df_nu, stars_list, diskstars_list,bulgestars_list, ds.cosmological_simulation, m, sp)
 
 

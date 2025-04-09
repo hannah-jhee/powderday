@@ -32,10 +32,9 @@ def manual_oct(reg,refined):
 
 def dtm_grid_oct(reg,refined):
     # HANNAH
+    print("HANNAH :", refined.shape)
     wTrue = np.where(np.array(refined) == True)[0]
-    #wTrue = np.array(refined)==True
     wFalse = np.where(np.array(refined) == False)[0]
-    #wFalse = np.array(refined)==False
 
     density_smoothed = reg["gas","smootheddensity"]
     metallicity_smoothed = reg["gas","smoothedmetals"]
@@ -49,6 +48,19 @@ def dtm_grid_oct(reg,refined):
     dust_smoothed[wFalse] = metallicity_smoothed * density_smoothed * cfg.par.dusttometals_ratio
     return dust_smoothed
 
+def dtm_grid_oct_ramses(reg, refined):
+    # HANNAH
+    density_smoothed = reg["gas","smootheddensity"]
+    metallicity_smoothed = reg["gas","smoothedmetals"]
+    masses_smoothed = reg["gas","smoothedmasses"]
+    
+    dust_smoothed = np.zeros(len(density_smoothed))
+    
+    print ('[grid_construction/dust_grid_gen/dtm_grid: ] len(wFalse) = ',len(density_smoothed))
+    print ('[grid_construction/dust_grid_gen/dtm_grid: ] len(metallicity_smoothed) = ',len(metallicity_smoothed))
+
+    dust_smoothed = metallicity_smoothed * density_smoothed * cfg.par.dusttometals_ratio
+    return dust_smoothed
 
 
 def remy_ruyer_oct(reg,refined):

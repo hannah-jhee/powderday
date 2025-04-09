@@ -10,6 +10,61 @@ import pdb
 ParticleDataset.filter_bbox = True
 ParticleDataset._skip_cache = True
 
+def ramses_zoom(fname, ds, bbox, field_add):
+    #ds.index
+    #ad = ds.all_data()
+    
+    print ('\n\n')
+    print ('----------------------------')
+    print ("[ramses zoom_bbox_filter:] Calculating Center of Mass")
+
+    #gas_com_x = np.sum(ad["gas","density"] * ad["gas","coordinates"][:,0])/np.sum(ad["gas","density"])
+    #gas_com_y = np.sum(ad["gas","density"] * ad["gas","coordinates"][:,1])/np.sum(ad["gas","density"])
+    #gas_com_z = np.sum(ad["gas","density"] * ad["gas","coordinates"][:,2])/np.sum(ad["gas","density"])
+    #com = [gas_com_x,gas_com_y,gas_com_z]
+
+    #print ("[octree zoom_bbox_filter:] Center of Mass is at coordinates (kpc): ",com)
+
+    center = [cfg.model.x_cent,cfg.model.y_cent,cfg.model.z_cent]
+    center = ds.arr(center, 'kpc')
+    print ('[octree zoom_bbox_filter:] using center (kpc): ',center)
+
+    box_len = cfg.par.zoom_box_len
+    box_len = ds.quan(box_len,'kpc')
+
+    #yt 4.x
+    if float(yt.__version__[0:3]) >= 4:
+        center = center.to('code_length').value
+        box_len = float(box_len.to('code_length').value)
+    else:
+        box_len = box_len.convert_to_units('code_length').value
+    bbox_lim = box_len
+
+    bbox1 = [[center[0]-bbox_lim,center[0]+bbox_lim],
+             [center[1]-bbox_lim,center[1]+bbox_lim],
+             [center[2]-bbox_lim,center[2]+bbox_lim]]
+    print ('[octree zoom] new zoomed bbox (comoving/h) in code units= ',bbox1)
+
+    ds = field_add(fname, bounding_box=bbox1, ds=ds, add_smoothed_quantities=True)
+    reg = ds.region(center=center,left_edge = np.asarray(center)-bbox_lim,right_edge = np.asarray(center)+bbox_lim)
+
+    #dx = reg['gas','dx']
+    #unit_cell_width = min(dx)
+    
+    reg.parameters = {}
+    reg.parameters['octree'] = {}
+    #reg.parameters['octree']['n_ref'] = np.unique(dx).shape[0]
+    #reg.parameters['octree'].n_ref = np.unique(dx).shape[0]
+    reg.parameters['octree'][('index','x')] = reg['gas','x']
+    reg.parameters['octree'][('index','y')] = reg['gas','y']
+    reg.parameters['octree'][('index','z')] = reg['gas','z']
+    reg.parameters['octree'][('index','dx')] = reg['gas','dx']
+    reg.parameters['octree'][('index','dy')] = reg['gas','dy']
+    reg.parameters['octree'][('index','dz')] = reg['gas','dz']
+    reg.parameters['octree'][('index','refined')] = np.array(refined)
+    
+    return reg
+    
 
 def octree_zoom_bbox_filter(fname,ds,bbox0,field_add):
 
@@ -46,9 +101,11 @@ def octree_zoom_bbox_filter(fname,ds,bbox0,field_add):
     #simulation isn't cosmological, then the only difference here will
     #be a 1/h
     #yt 3.x
+    center = ds.arr(center,'kpc')
     box_len = ds.quan(box_len,'kpc')
     #yt 4.x
     if float(yt.__version__[0:3]) >= 4:
+        center = center.to('code_length').value
         box_len = float(box_len.to('code_length').value)
         bbox_lim = box_len
     else:
@@ -56,8 +113,8 @@ def octree_zoom_bbox_filter(fname,ds,bbox0,field_add):
         bbox_lim = box_len
     
     bbox1 = [[center[0]-bbox_lim,center[0]+bbox_lim],
-            [center[1]-bbox_lim,center[1]+bbox_lim],
-            [center[2]-bbox_lim,center[2]+bbox_lim]]
+             [center[1]-bbox_lim,center[1]+bbox_lim],
+             [center[2]-bbox_lim,center[2]+bbox_lim]]
     print ('[octree zoom] new zoomed bbox (comoving/h) in code units= ',bbox1)
     
 
@@ -186,8 +243,8 @@ def enzo_zoom(fname,ds,field_add):
     #convenience function within hyperion, AMRGrid.from_yt requires a
     #datasaet print("[enzo_tributary/enzo_m_gen]: saving the dataset
     #as temp_enzo.h5")
-    reg.save_as_dataset('temp_enzo.h5',fields=[('all','creation_time'),('gas','metal_density'),('gas','density'),('newstars','metallicity_fraction'),('newstars','particle_mass'),('all', 'particle_index'),('index', 'grid_level'),('gas','dust_density')])
-    ds1 = yt.load('temp_enzo.h5')
+    #reg.save_as_dataset('temp_enzo.h5',fields=[('all','creation_time'),('gas','metal_density'),('gas','density'),('newstars','metallicity_fraction'),('newstars','particle_mass'),('all', 'particle_index'),('index', 'grid_level'),('gas','dust_density')])
+    ds1 = ds #yt.load('temp_enzo.h5')
     ad1 = ds1.all_data()
     print("[zoom/enzo_zoom]: temporarily saving temp_enzo.h5")
 
@@ -211,40 +268,5 @@ def enzo_zoom(fname,ds,field_add):
     ds1.index_num_grids = reg.index.num_grids
     ds1.index.num_stars = reg.index.num_stars
     ds1.index.parameters = reg.index.parameters
-    
-    return reg,ds1
-
-def ramses_zoom(fname,ds,field_add):
-    #set up the cut out region from the main dataset.  here, we create
-    #a yt region out of the parent ds, and then re-save this as a cutout dataset named ds1
-    center = ds.arr([cfg.model.x_cent,cfg.model.y_cent,cfg.model.z_cent],'code_length')
-    box_len = ds.quan(cfg.par.zoom_box_len,'kpc').to('code_length')
-    reg = ds.region(center, center-box_len, center+box_len)
-    
-    #now play a game where we save the region as a dataset and then
-    #reload this as a new ds.  we need to do this because the
-    #convenience function within hyperion, AMRGrid.from_yt requires a
-    #datasaet print("[enzo_tributary/enzo_m_gen]: saving the dataset
-    #as temp_enzo.h5")
-    reg.save_as_dataset('temp_ramses.h5',fields=[('all','conformal_birth_time'),('gas','metal_density'),('gas','density'),
-                                                 ('star','metallicity_fraction'),('star','particle_mass'),
-                                                 ('all', 'particle_index'),('index', 'grid_level'),('gas','dust_density')])
-    ds1 = yt.load('temp_ramses.h5')
-    ad1 = ds1.all_data()
-    print("[zoom/enzo_zoom]: temporarily saving temp_ramses.h5")
-
-    # Add index
-    ds1.index.max_level = reg.index.max_level
-    ds1.index.grid_levels = reg[('index','grid_level')]
-    ds1.index.grids = reg[('index','grid_indices')]
-
-    x_ledge = reg[('index','x')]-reg[('index','dx')]/2
-    y_ledge = reg[('index','y')]-reg[('index','dy')]/2
-    z_ledge = reg[('index','z')]-reg[('index','dz')]/2
-    ds1.index.grid_left_edge = ds1.arr(np.c_[x_ledge.value, y_ledge.value, z_ledge.value], units='code_length')
-    x_redge = reg[('index','x')]+reg[('index','dx')]/2
-    y_redge = reg[('index','y')]+reg[('index','dy')]/2
-    z_redge = reg[('index','z')]+reg[('index','dz')]/2
-    ds1.index.grid_right_edge = ds1.arr(np.c_[x_redge.value, y_redge.value, z_redge.value], units='code_length')
     
     return reg,ds1

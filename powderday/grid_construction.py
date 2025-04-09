@@ -7,7 +7,7 @@ from powderday.gridstats import gridstats
 from powderday.zoom import octree_zoom_bbox_filter,arepo_zoom,enzo_zoom,ramses_zoom
 from yt.geometry.selection_routines import AlwaysSelector
 #octree quantities for dust
-from powderday.dust_grid_gen import dtm_grid_oct, remy_ruyer_oct, manual_oct,li_bestfit_oct,li_ml_oct
+from powderday.dust_grid_gen import dtm_grid_oct, remy_ruyer_oct, manual_oct,li_bestfit_oct,li_ml_oct, dtm_grid_oct_ramses
 
 #particle and/or mesh quantities for dust
 from powderday.dust_grid_gen import dtm_particle_mesh,manual_particle_mesh,remy_ruyer_particle_mesh,li_bestfit_particle_mesh,li_ml_particle_mesh
@@ -48,7 +48,6 @@ def yt_octree_generate(fname, field_add):
     # quantities (which can take some time in yt4.x).
     ds = field_add(fname, bounding_box=bbox,add_smoothed_quantities=False)
 
-        
 
     #now zoom in.
     reg = octree_zoom_bbox_filter(fname, ds, bbox, field_add)
@@ -66,7 +65,7 @@ def yt_octree_generate(fname, field_add):
     
     if float(yt.__version__[0:3]) >= 4:
         refined = reg.parameters['octree'][('index','refined')].astype('bool')
-
+        
         #get central positions of cells as edges + width/2.
         #        xpos = (ds.parameters['octree'][('index', 'x')]+(ds.parameters['octree'][('index','dx')]/2.))[~refined]
         #        ypos = (ds.parameters['octree'][('index', 'y')]+(ds.parameters['octree'][('index','dy')]/2.))[~refined]
@@ -176,6 +175,47 @@ def yt_octree_generate(fname, field_add):
     return refined, dust_smoothed, fc1, fw1, reg, ds
 
 
+#--------------------------------------------------------------------------------
+def ramses_grid_generate(fname, field_add):
+    ds = field_add(fname)
+    ds.cosmological_simulation=True
+
+    #set up the dust model
+    # crash the code if the parameter choice for dust grid type isn't in
+    # the hard coded valid list below
+    dust_grid_type_list = ['dtm', 'rr', 'manual','li_bestfit','li_ml']
+    try:
+        dust_choice = dust_grid_type_list.index(cfg.par.dust_grid_type)
+    except ValueError as e:
+        print('You chose a dust_choice that isnt a valid selection within the list: dust_grid_type_list....crashing now!')
+        sys.exit()
+
+    if cfg.par.dust_grid_type == 'dtm':
+        dtm_amr(ds)
+
+    if cfg.par.dust_grid_type == 'rr':
+        remy_ruyer_amr(ds)
+    
+    if cfg.par.dust_grid_type == 'li_bestfit':
+        li_bestfit_amr(ds)
+
+    if cfg.par.dust_grid_type == 'li_ml':
+        li_ml_amr(ds)
+
+    #now zoom in 
+    #reg,ds1 = ramses_zoom(fname, ds, field_add)
+    reg = ds.r[:,:,:]
+
+    #we need access to this h5 file while adding dust grids
+    #(potentially), so only remove after these have been added.
+    #print("[grid_construction/ramses_grid_generate:] removing temp_enzo.h5")
+    #os.remove('temp_ramses.h5')
+
+    return reg,ds
+
+#-----------------------------------------------------------------------------------------------
+
+
 def enzo_grid_generate(fname,field_add):
     #call the front end (frontends/enzo2pd) to add the fields in powderday format
 
@@ -274,55 +314,11 @@ def arepo_vornoi_grid_generate(fname, field_add):
         print('setting constant dust grid to 4.e-22')
         dustdens = np.zeros(len(reg["gasmasses"]))+4.e-22
 
-
-
     #DEBUG -- this will eventually go into a refactored dust_grid_gen
 #    metaldens = reg["metaldens"]
 #    dustdens = (metaldens*cfg.par.dusttometals_ratio).to('g/cm**3').value
 
     return reg,ds,dustdens
-
-def ramses_grid_generate(fname,field_add):
-    #call the front end (frontends/enzo2pd) to add the fields in powderday format
-    
-    ds = field_add(fname)
-
-    #set up the dust model
-    # crash the code if the parameter choice for dust grid type isn't in
-    # the hard coded valid list below
-    dust_grid_type_list = ['dtm', 'rr', 'manual','li_bestfit','li_ml']
-    try:
-        dust_choice = dust_grid_type_list.index(cfg.par.dust_grid_type)
-    except ValueError as e:
-        print('You chose a dust_choice that isnt a valid selection within the list: dust_grid_type_list....crashing now!')
-        sys.exit()
-
-    if cfg.par.dust_grid_type == 'dtm':
-        dtm_amr(ds)
-
-    if cfg.par.dust_grid_type == 'rr':
-        remy_ruyer_amr(ds)
-    
-    if cfg.par.dust_grid_type == 'li_bestfit':
-        li_bestfit_amr(ds)
-
-    if cfg.par.dust_grid_type == 'li_ml':
-        li_ml_amr(ds)
-
-    #print(ds.derived_field_list)
-    #now zoom in 
-    reg,ds1 = ramses_zoom(fname,ds,field_add)
-
-    #reg = ds.r[:,:,:]
-    #we need access to this h5 file while adding dust grids
-    #(potentially), so only remove after these have been added.
-    #print("[grid_construction/stream_grid_generate:] removing temp_stream.h5")
-    #os.remove('temp_hr5.h5')
-
-    # print("Here in grid construction:::::::::::::::::::",reg[('stellar','ages')])
-
-
-    return reg,ds1
 
 
 

@@ -1,5 +1,6 @@
 from __future__ import print_function
 import yt
+import pickle
 import powderday.config as cfg
 
 
@@ -47,14 +48,26 @@ def stream(fname):
             [-2.*cfg.par.bbox_lim,2.*cfg.par.bbox_lim],
             [-2.*cfg.par.bbox_lim,2.*cfg.par.bbox_lim]]
     
-    try: 
-        ds = yt.load(fname,bounding_box = bbox)
-        ds.index
-        print ('[front_end_controller:] bounding_box being used')
-    except:
-        ds = yt.load(fname)
-        ds.index
-        print ('[front_end_controller:] NO bounding_box being used')
+    if fname.endswith('.pkl'):
+        with open(fname, 'rb') as handle:
+            global_bins, x, data = pickle.load(handle)
+        
+        ds = yt.load_amr_grids(data, [global_bins,global_bins,global_bins], x,
+                               length_unit=(4096.09018298, 'kpc'),    # input 받아서 처리하는걸로 나중에 바꾸기1!!!!!!!
+                               time_unit=(14.50798394,'Gyr'),    # input 받아서 처리하는걸로 나중에 바꾸기1!!!!!!!
+                               mass_unit=(2.73155891e+12, 'Msun'),    # input 받아서 처리하는걸로 나중에 바꾸기1!!!!!!!
+                               sim_time=0.95092644,    # input 받아서 처리하는걸로 나중에 바꾸기1!!!!!!!
+                               periodicity=(False,False,False))
+        ds.cosmological_simulation = 1
+    else:
+        try: 
+            ds = yt.load(fname,bounding_box = bbox)
+            ds.index
+            print ('[front_end_controller:] bounding_box being used')
+        except:
+            ds = yt.load(fname)
+            ds.index
+            print ('[front_end_controller:] bounding_box NOT being used')
 
     ds_type = ds.dataset_type 
     
@@ -63,6 +76,7 @@ def stream(fname):
     options = {'gadget_hdf5':gadget,
                'tipsy':tipsy,
                'ramses':ramses,
+               'stream':ramses,
                'enzo_packed_3d':enzo,
                'arepo_hdf5':arepo}
 

@@ -11,13 +11,8 @@ from astropy import constants
 #========================================================
 #MODIFIABLE HEADER (make this a function later with argv)
 z = 0.001
-run = '/home/desika.narayanan/pd/examples/gadget/mw_zoom/example.135.rtout.sed'
+run = '/home/hannahj/data/mock_image/DARWIN_II/darwin_test_r_sdss.rtout.sed'#'/home/desika.narayanan/pd/examples/gadget/mw_zoom/example.135.rtout.sed'
 #========================================================
-
-
-
-
-
 
 
 fig = plt.figure()
@@ -48,7 +43,7 @@ for i in range(flux.shape[0]):
 
 ax.set_xlabel(r'$\lambda$ [$\mu$m]')
 ax.set_ylabel('Flux (mJy)')
-ax.set_ylim([1,1e8])
+ax.set_ylim([1e-1,1e3])
 ax.set_xlim(0.05,15000)
 ax.grid()
 
