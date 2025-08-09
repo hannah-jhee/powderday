@@ -2,4 +2,5 @@
 dist
 build
 powderday.egg-info
-
+pacakges/
+powderday/agn_models/*.hdf5
