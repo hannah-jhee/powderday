@@ -27,7 +27,7 @@ def ramses_zoom(fname, ds, bbox, field_add):
 
     center = [cfg.model.x_cent,cfg.model.y_cent,cfg.model.z_cent]
     center = ds.arr(center, 'kpc')
-    print ('[octree zoom_bbox_filter:] using center (kpc): ',center)
+    print ('[ramses zoom_bbox_filter:] using center (kpc): ',center)
 
     box_len = cfg.par.zoom_box_len
     box_len = ds.quan(box_len,'kpc')
@@ -43,7 +43,7 @@ def ramses_zoom(fname, ds, bbox, field_add):
     bbox1 = [[center[0]-bbox_lim,center[0]+bbox_lim],
              [center[1]-bbox_lim,center[1]+bbox_lim],
              [center[2]-bbox_lim,center[2]+bbox_lim]]
-    print ('[octree zoom] new zoomed bbox (comoving/h) in code units= ',bbox1)
+    print ('[ramses zoom] new zoomed bbox (comoving/h) in code units= ',bbox1)
 
     ds = field_add(fname, bounding_box=bbox1, ds=ds, add_smoothed_quantities=True)
     reg = ds.region(center=center,left_edge = np.asarray(center)-bbox_lim,right_edge = np.asarray(center)+bbox_lim)
@@ -100,12 +100,12 @@ def octree_zoom_bbox_filter(fname,ds,bbox0,field_add):
     #input in parameters_master will be in proper units.  if a
     #simulation isn't cosmological, then the only difference here will
     #be a 1/h
+    
     #yt 3.x
-    center = ds.arr(center,'kpc')
     box_len = ds.quan(box_len,'kpc')
+    
     #yt 4.x
     if float(yt.__version__[0:3]) >= 4:
-        center = center.to('code_length').value
         box_len = float(box_len.to('code_length').value)
         bbox_lim = box_len
     else:

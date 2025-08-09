@@ -3,6 +3,7 @@ from astropy import constants
 from powderday.image_processing import add_transmission_filters, convolve
 from astropy import units as u
 import powderday.config as cfg
+from hyperion.util.constants import pc
 import numpy as np
 
 def make_SED(m, par, model):
@@ -37,6 +38,7 @@ def make_SED(m, par, model):
         m.set_copy_input(False)
         sed = m.add_peeled_images(sed=True, image=False)
 
+
         if cfg.par.MANUAL_ORIENTATION == True:
             sed.set_viewing_angles(np.array(cfg.par.THETA), np.array(cfg.par.PHI))
 
@@ -65,6 +67,15 @@ def make_SED(m, par, model):
         m.set_convergence(True, percentile=99., absolute=1.01, relative=1.01)
 
         sed = m.add_peeled_images(sed=True, image=False)
+        #--modification by Hannah (for aperture)
+        if cfg.par.APERTURE == True:
+            offset = (cfg.par.offset * u.kpc).to('cm').value
+            ap_min = (cfg.par.ap_min * u.kpc).to('cm').value
+            ap_max = (cfg.par.ap_max * u.kpc).to('cm').value
+
+            sed.set_peeloff_origin(offset)
+            sed.set_aperture_radii(n_ap=int(cfg.par.n_ap), ap_min=ap_min, ap_max=ap_max)
+        #--end of modification by Hannah
         sed.set_wavelength_range(2500, 0.001, 1000.)
 
         if cfg.par.MANUAL_ORIENTATION == True:

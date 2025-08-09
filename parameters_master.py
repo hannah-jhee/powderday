@@ -182,7 +182,13 @@ FIX_SED_MONOCHROMATIC_WAVELENGTHS = False # if set, then we only use
 SED_MONOCHROMATIC_min_lam = 0.1 # micron
 SED_MONOCHROMATIC_max_lam = 1   # micron
 
-
+# Modification by Hannah (for apertures)
+APERTURE = False
+n_ap = 5
+ap_min = 10 # pc
+ap_max = 1000 # pc
+offset = [0,0,0] # kpc
+# End of modification by Hannah
 
 
 
